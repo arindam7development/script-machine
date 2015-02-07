@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<!-- Arindam Mishra -->
+<style type=text/css>
+.nytimes-container{
+  background-color: rgba(255, 255, 255, 0.5);
+font-size: 16px;
+    display: block;
+    float: left;
+    box-sizing: border-box;
+    width: 48%;
+    margin: 0 2% 10px 0
+
+}
+.wikipedia-container{
+background-color: rgba(255, 255, 255, 0.5);
+font-size: 16px;
+    display: block;
+
+    float: right;
+    box-sizing: border-box;
+    width: 48%;
+    margin: 0 0 10px 2%
+
+
+}
+</style>
+
+
+<head>
+<title>MoveOn app</title>
+<script>
+function loadData(){
+
+
+var $body = $('body');
+var $wikiElem = $('#wikipedia-links');
+var $nytHeaderElem = $('#nytimes-header');
+var $nytElem = $('#nytimes-articles');
+var $greeting =$('#greeting');
+
+//clearing old data before new request
+
+$wikiElem.text("");
+$nytElem.text("");
+
+var streetStr = $('#street').val();
+var cityStr = $('#city').val();
+var address = streetStr + ','+cityStr ;
+
+$greeting.text('So , you want to live at '+ address+'?');
+
+var streetviewUrl = 'http://maps.googleapis.com/maps/api/streetview?size=1024x1024&location='+address+'';
+
+$body.css('background-image','url("' + streetviewUrl + '")');
+
+//NYtimes ajax request
+
+
+var nytimesUrl='http://api.nytimes.com/svc/search/v2/articlesearch.json?q=' + cityStr + '&sort=newest&api-key=6fd371b3b084051f33d5a03293375144:9:70666222';
+$.getJSON(nytimesUrl,function(data){
+$nytHeaderElem.text('New York Times Articles About '+cityStr);
+articles = data.response.docs;
+for(var i=0;i<=articles.length;i++){
+   var article = articles[i];
+   $nytElem.append('<li class="article">'+'<a href="'+article.web_url+'">'+article.headline.main+'</a>'+'<p>'+article.snippet+'</p>'+'</li>');
+};
+}).error(function(e){
+   $nytHeaderElem.text('New York Times Articles Could Not Be Loaded');
+});
+
+//Wikipedia Ajax request
+
+
+var wikiUrl = 'http://en.wikipedia.org/w/api.php?action=opensearch&search=' + cityStr + '&format=json&callback=wikiCallback';
+
+var wikiRequestTimeout = setTimeout(function(){
+  $wikiElem.text("failed to get wikipedia resources")},8000); 
+
+
+
+$.ajax({
+   url: wikiUrl,
+   dataType: "jsonp",
+success: function(response){
+   var articleList = response[1];
+  for(var i=0;i<=articleList.length;i++){
+      articleStr = articleList[i];
+      var url = 'http://en.wikipedia.org/wiki'+articleStr;
+      $wikiElem.append('<li><a href="' + url + '">'+articleStr +'</a></li>');
+};
+clearTimeout(wikiRequestTimeout);
+}
+});
+
+}
+
+
+
+
+</script>
+
+</head>
+
+
+<body>
+
+
+<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<form id="form-container" class="form-container" >
+
+<label for="street" style="font-family:Agency FB;font-size: 20px;">Street:&nbsp&nbsp</label>
+
+<input type="text" id="street" placeholder="Enter the Street name...">
+
+<label for="city" style="font-family:Agency FB;font-size: 20px">&nbsp&nbsp&nbsp&nbspCity:&nbsp&nbsp</label>
+
+<input type="text" id="city" placeholder="Enter the City name...">
+
+<input type="button" value="Submit" onclick="loadData()"/><hr>
+
+<h2 id="greeting" class="greeting"> So , you want to live at ? </h2>
+
+</div>
+<div class="nytimes-container">
+ <h2 id="nytimes-header" class="nytimes-header"> New York Times Articles About</h2>
+<ul id="nytimes-articles" class="article-list">
+</ul>
+</div>
+<div class="wikipedia-container">
+<h2 id="wikipedia-header" >Relevant Wikipedia Links</h2>
+<ul id="wikipedia-links">
+
+</ul>
+
+</div>
+
+</body>
+</html>
